@@ -70,21 +70,19 @@ python image_analyzer.py "C:\Users\YourName\Pictures\image.jpg"
 ## 📊 Sample Output
 
 ```text
-================================
-IMAGE METADATA REPORT
-================================
 
+========================================
+IMAGE METADATA REPORT
+========================================
 File Name       : photo.jpg
-File Size       : 239.88 KB
+File Size       : 35.98 KB
 File Format     : JPEG
-Width           : 1920 pixels
-Height          : 1080 pixels
-Resolution      : 72 x 72 DPI
+Width           : 640 px
+Height          : 762 px
+Resolution      : 150.00 x 150.00 DPI
 Color Mode      : RGB
 
 EXIF Metadata
--------------------------------
-Camera          : Not available
-Date Taken      : Not available
-Orientation     : Not available
-```
+----------------------------------------
+No EXIF metadata found.
+========================================
