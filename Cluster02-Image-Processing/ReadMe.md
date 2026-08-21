@@ -33,18 +33,6 @@ A simple Python-based tool that analyzes an image and generates a detailed **met
 * **Pathlib**
 * **ExifTags**
 
-## 📋 Project Structure
-
-```text
-image-analyzer/
-│
-├── image_analyzer.py
-├── photo.jpg
-├── requirements.txt
-├── README.md
-└── .gitignore
-```
-
 ## ⚙️ Installation
 
 ### 1. Clone the repository
