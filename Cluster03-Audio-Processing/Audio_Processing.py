@@ -1,40 +1,89 @@
 import os
-import json
-import subprocess
-import shutil
-from pathlib import Path
+
+from image_analyzer import analyze_image
+from audio_analyzer import analyze_audio
+from video_analyzer import analyze_video
 
 
-def format_file_size(size_in_bytes):
-    """Convert bytes into readable file size."""
+def get_file_type(file_path):
+    """Identify file type from extension."""
 
-    size = float(size_in_bytes)
+    image_extensions = [
+        ".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tiff"
+    ]
 
-    units = ["Bytes", "KB", "MB", "GB", "TB"]
+    audio_extensions = [
+        ".mp3", ".wav", ".ogg", ".flac", ".aac"
+    ]
 
-    for unit in units:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-
-        size /= 1024
-
-    return f"{size:.2f} PB"
+    video_extensions = [
+        ".mp4", ".mkv", ".avi", ".mov", ".webm"
+    ]
 
 
-def format_duration(seconds):
-    """Convert duration from seconds to HH:MM:SS."""
+    extension = os.path.splitext(file_path)[1].lower()
 
-    try:
-        seconds = float(seconds)
 
-        hours = int(seconds // 3600)
-        minutes = int((seconds % 3600) // 60)
-        seconds = seconds % 60
+    if extension in image_extensions:
+        return "image"
 
-        return f"{hours:02}:{minutes:02}:{seconds:06.3f}"
+    elif extension in audio_extensions:
+        return "audio"
 
-    except (ValueError, TypeError):
-        return "Not Available"
+    elif extension in video_extensions:
+        return "video"
+
+    else:
+        return "unknown"
+
+
+
+def main():
+
+    print("=" * 70)
+    print("        OFFLINE CONSOLIDATED MULTIMEDIA ANALYZER")
+    print("=" * 70)
+
+
+    file_path = input("\nEnter file path: ")
+
+    file_path = file_path.strip('"').strip("'")
+
+
+    if not os.path.exists(file_path):
+        print("\nError: File not found.")
+        return
+
+
+    file_type = get_file_type(file_path)
+
+
+    print("\nDetected File Type:", file_type.upper())
+
+
+    if file_type == "image":
+
+        analyze_image(file_path)
+
+
+    elif file_type == "audio":
+
+        analyze_audio(file_path)
+
+
+    elif file_type == "video":
+
+        analyze_video(file_path)
+
+
+    else:
+
+        print("\nUnsupported file format.")
+
+
+
+if __name__ == "__main__":
+    main()        return "Not Available"
 
 
 def check_ffprobe():
