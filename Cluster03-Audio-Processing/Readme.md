@@ -2,7 +2,7 @@
 
 ## Overview
 
-Offline Consolidated Multimedia Analyzer is a Python-based application that extracts metadata from different multimedia files such as:
+
 
 - Images
 - Audio files
