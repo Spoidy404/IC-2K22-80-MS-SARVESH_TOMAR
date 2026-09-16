@@ -1,341 +1,1 @@
-import os
-
-from image_analyzer import analyze_image
-from audio_analyzer import analyze_audio
-from video_analyzer import analyze_video
-
-
-def get_file_type(file_path):
-    """Identify file type from extension."""
-
-    image_extensions = [
-        ".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tiff"
-    ]
-
-    audio_extensions = [
-        ".mp3", ".wav", ".ogg", ".flac", ".aac"
-    ]
-
-    video_extensions = [
-        ".mp4", ".mkv", ".avi", ".mov", ".webm"
-    ]
-
-
-    extension = os.path.splitext(file_path)[1].lower()
-
-
-    if extension in image_extensions:
-        return "image"
-
-    elif extension in audio_extensions:
-        return "audio"
-
-    elif extension in video_extensions:
-        return "video"
-
-    else:
-        return "unknown"
-
-
-
-def main():
-
-    print("=" * 70)
-    print("        OFFLINE CONSOLIDATED MULTIMEDIA ANALYZER")
-    print("=" * 70)
-
-
-    file_path = input("\nEnter file path: ")
-
-    file_path = file_path.strip('"').strip("'")
-
-
-    if not os.path.exists(file_path):
-        print("\nError: File not found.")
-        return
-
-
-    file_type = get_file_type(file_path)
-
-
-    print("\nDetected File Type:", file_type.upper())
-
-
-    if file_type == "image":
-
-        analyze_image(file_path)
-
-
-    elif file_type == "audio":
-
-        analyze_audio(file_path)
-
-
-    elif file_type == "video":
-
-        analyze_video(file_path)
-
-
-    else:
-
-        print("\nUnsupported file format.")
-
-
-
-if __name__ == "__main__":
-    main()        return "Not Available"
-
-
-def check_ffprobe():
-    """Check whether FFprobe is installed."""
-
-    return shutil.which("ffprobe") is not None
-
-
-def get_audio_metadata(audio_path):
-    """
-    Extract audio metadata using FFprobe.
-    """
-
-    command = [
-        "ffprobe",
-        "-v",
-        "quiet",
-        "-print_format",
-        "json",
-        "-show_format",
-        "-show_streams",
-        audio_path
-    ]
-
-    result = subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-
-    if result.returncode != 0:
-        raise Exception(result.stderr)
-
-    return json.loads(result.stdout)
-
-
-def get_audio_stream(streams):
-    """Find and return the first audio stream."""
-
-    for stream in streams:
-        if stream.get("codec_type") == "audio":
-            return stream
-
-    return None
-
-
-def print_tag(label, value):
-    """Print metadata in a formatted way."""
-
-    if value is None or value == "":
-        value = "Not Available"
-
-    print(f"{label:<20}: {value}")
-
-
-def print_tags(tags):
-    """Print all available metadata tags."""
-
-    if not tags:
-        print("No additional metadata available.")
-        return
-
-    for key, value in tags.items():
-        print(f"{key:<25}: {value}")
-
-
-def analyze_audio(audio_path):
-    """Analyze an audio file and generate metadata report."""
-
-    if not os.path.exists(audio_path):
-        print("\nError: Audio file not found.")
-        return
-
-    if not os.path.isfile(audio_path):
-        print("\nError: Provided path is not a file.")
-        return
-
-    if not check_ffprobe():
-        print("\nError: FFprobe is not installed or not added to PATH.")
-        print("Please install FFmpeg first.")
-        return
-
-    try:
-        metadata = get_audio_metadata(audio_path)
-
-        file_path = Path(audio_path)
-        file_size = os.path.getsize(audio_path)
-
-        format_data = metadata.get("format", {})
-        streams = metadata.get("streams", [])
-
-        audio_stream = get_audio_stream(streams)
-
-        print()
-        print("=" * 40)
-        print("AUDIO METADATA REPORT")
-        print("=" * 40)
-
-        # Basic File Information
-
-        print("\nBasic Information")
-        print("-" * 40)
-
-        print_tag("File Name", file_path.name)
-        print_tag("File Extension", file_path.suffix.upper())
-        print_tag("File Size", format_file_size(file_size))
-
-        # Format Information
-
-        print("\nFormat Information")
-        print("-" * 40)
-
-        print_tag(
-            "File Format",
-            format_data.get("format_long_name")
-        )
-
-        print_tag(
-            "Format Name",
-            format_data.get("format_name")
-        )
-
-        print_tag(
-            "Duration",
-            format_duration(format_data.get("duration"))
-        )
-
-        print_tag(
-            "Bit Rate",
-            (
-                f"{int(format_data.get('bit_rate')) / 1000:.2f} kbps"
-                if format_data.get("bit_rate")
-                else "Not Available"
-            )
-        )
-
-        print_tag(
-            "Start Time",
-            format_data.get("start_time")
-        )
-
-        # Audio Stream Information
-
-        print("\nAudio Properties")
-        print("-" * 40)
-
-        if audio_stream:
-
-            print_tag(
-                "Codec",
-                audio_stream.get("codec_long_name")
-            )
-
-            print_tag(
-                "Codec Name",
-                audio_stream.get("codec_name")
-            )
-
-            print_tag(
-                "Sample Rate",
-                (
-                    f"{audio_stream.get('sample_rate')} Hz"
-                    if audio_stream.get("sample_rate")
-                    else "Not Available"
-                )
-            )
-
-            print_tag(
-                "Channels",
-                audio_stream.get("channels")
-            )
-
-            print_tag(
-                "Channel Layout",
-                audio_stream.get("channel_layout")
-            )
-
-            print_tag(
-                "Sample Format",
-                audio_stream.get("sample_fmt")
-            )
-
-            print_tag(
-                "Bit Rate",
-                (
-                    f"{int(audio_stream.get('bit_rate')) / 1000:.2f} kbps"
-                    if audio_stream.get("bit_rate")
-                    else "Not Available"
-                )
-            )
-
-            print_tag(
-                "Bits Per Sample",
-                audio_stream.get("bits_per_sample")
-            )
-
-            print_tag(
-                "Bits Per Raw Sample",
-                audio_stream.get("bits_per_raw_sample")
-            )
-
-            print_tag(
-                "Number of Frames",
-                audio_stream.get("nb_frames")
-            )
-
-        else:
-            print("No audio stream found.")
-
-        # Metadata Tags
-
-        print("\nAudio Metadata / Tags")
-        print("-" * 40)
-
-        format_tags = format_data.get("tags", {})
-
-        print_tags(format_tags)
-
-        # Stream Metadata
-
-        if audio_stream:
-
-            stream_tags = audio_stream.get("tags", {})
-
-            if stream_tags:
-                print("\nStream Metadata")
-                print("-" * 40)
-
-                print_tags(stream_tags)
-
-        print("\n" + "=" * 40)
-        print("REPORT COMPLETED")
-        print("=" * 40)
-
-    except Exception as error:
-        print(f"\nError while processing audio: {error}")
-
-
-def main():
-
-    print("=" * 40)
-    print("AUDIO FILE ANALYZER")
-    print("=" * 40)
-
-    audio_path = "/Users/sachinyaduwanshi/Desktop/mm_lab/audio.ogg"
-
-    # Remove quotes if user copies a path with quotes
-    audio_path = audio_path.strip('"').strip("'")
-
-    analyze_audio(audio_path)
-
-
-if __name__ == "__main__":
-    main()
+import osimport jsonimport shutilimport subprocessfrom pathlib import Pathdef check_ffprobe():    """Check whether FFprobe is installed."""    return shutil.which("ffprobe") is not Nonedef get_audio_metadata(audio_path):    """Extract audio metadata using FFprobe."""    command = [        "ffprobe",        "-v", "quiet",        "-print_format", "json",        "-show_format",        "-show_streams",        audio_path    ]    result = subprocess.run(        command,        stdout=subprocess.PIPE,        stderr=subprocess.PIPE,        text=True    )    if result.returncode != 0:        raise Exception(result.stderr)    return json.loads(result.stdout)def get_audio_stream(streams):    """Find the first audio stream."""    for stream in streams:        if stream.get("codec_type") == "audio":            return stream    return Nonedef format_file_size(size):    """Convert bytes into a readable file size."""    if size < 1024:        return f"{size} B"    elif size < 1024 ** 2:        return f"{size / 1024:.2f} KB"    elif size < 1024 ** 3:        return f"{size / (1024 ** 2):.2f} MB"    else:        return f"{size / (1024 ** 3):.2f} GB"def format_duration(duration):    """Convert duration in seconds to HH:MM:SS."""    if duration is None:        return "Not Available"    try:        seconds = int(float(duration))        hours = seconds // 3600        minutes = (seconds % 3600) // 60        seconds = seconds % 60        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"    except (ValueError, TypeError):        return "Not Available"def print_tag(label, value):    """Print metadata in formatted form."""    if value is None or value == "":        value = "Not Available"    print(f"{label:<25}: {value}")def print_tags(tags):    """Print metadata tags."""    if not tags:        print("No additional metadata available.")        return    for key, value in tags.items():        print(f"{key:<25}: {value}")def analyze_audio(audio_path):    """Analyze an audio file and generate a metadata report."""    if not os.path.exists(audio_path):        print("\nError: Audio file not found.")        return    if not os.path.isfile(audio_path):        print("\nError: Provided path is not a file.")        return    if not check_ffprobe():        print("\nError: FFprobe is not installed or not added to PATH.")        print("Please install FFmpeg.")        return    try:        metadata = get_audio_metadata(audio_path)        file_path = Path(audio_path)        file_size = os.path.getsize(audio_path)        format_data = metadata.get("format", {})        streams = metadata.get("streams", [])        audio_stream = get_audio_stream(streams)        print()        print("=" * 50)        print("              AUDIO METADATA REPORT")        print("=" * 50)        # BASIC INFORMATION        print("\nBasic Information")        print("-" * 50)        print_tag("File Name", file_path.name)        print_tag("File Extension", file_path.suffix.upper())        print_tag("File Size", format_file_size(file_size))        # FORMAT INFORMATION        print("\nFormat Information")        print("-" * 50)        print_tag(            "File Format",            format_data.get("format_long_name")        )        print_tag(            "Format Name",            format_data.get("format_name")        )        print_tag(            "Duration",            format_duration(format_data.get("duration"))        )        bit_rate = format_data.get("bit_rate")        if bit_rate:            print_tag(                "Bit Rate",                f"{int(bit_rate) / 1000:.2f} kbps"            )        else:            print_tag("Bit Rate", None)        print_tag(            "Start Time",            format_data.get("start_time")        )        # AUDIO PROPERTIES        print("\nAudio Properties")        print("-" * 50)        if audio_stream:            print_tag(                "Codec",                audio_stream.get("codec_long_name")            )            print_tag(                "Codec Name",                audio_stream.get("codec_name")            )            sample_rate = audio_stream.get("sample_rate")            if sample_rate:                print_tag(                    "Sample Rate",                    f"{sample_rate} Hz"                )            else:                print_tag("Sample Rate", None)            print_tag(                "Channels",                audio_stream.get("channels")            )            print_tag(                "Channel Layout",                audio_stream.get("channel_layout")            )            print_tag(                "Sample Format",                audio_stream.get("sample_fmt")            )            stream_bit_rate = audio_stream.get("bit_rate")            if stream_bit_rate:                print_tag(                    "Bit Rate",                    f"{int(stream_bit_rate) / 1000:.2f} kbps"                )            else:                print_tag("Bit Rate", None)            print_tag(                "Bits Per Sample",                audio_stream.get("bits_per_sample")            )            print_tag(                "Bits Per Raw Sample",                audio_stream.get("bits_per_raw_sample")            )            print_tag(                "Number of Frames",                audio_stream.get("nb_frames")            )        else:            print("No audio stream found.")        # METADATA TAGS        print("\nAudio Metadata / Tags")        print("-" * 50)        format_tags = format_data.get("tags", {})        print_tags(format_tags)        # STREAM TAGS        if audio_stream:            stream_tags = audio_stream.get("tags", {})            if stream_tags:                print("\nStream Metadata")                print("-" * 50)                print_tags(stream_tags)        print("\n" + "=" * 50)        print("              REPORT COMPLETED")        print("=" * 50)    except Exception as error:        print(f"\nError while processing audio: {error}")def main():    print("=" * 50)    print("              AUDIO FILE ANALYZER")    print("=" * 50)    file_path = input("\nEnter audio file path: ")    file_path = file_path.strip().strip('"').strip("'")    if not os.path.exists(file_path):        print("\nError: File not found.")        return    print("\nDetected File Type: AUDIO")    analyze_audio(file_path)if __name__ == "__main__":    main()

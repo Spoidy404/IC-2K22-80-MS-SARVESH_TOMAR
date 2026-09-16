@@ -16,10 +16,14 @@ def format_size(size):
 
 def analyze_image(image_path):
 
-    print("Starting image analysis...")
+    print("\nStarting image analysis...")
 
     if not os.path.exists(image_path):
         print(f"ERROR: Image not found: {image_path}")
+        return
+
+    if not os.path.isfile(image_path):
+        print("ERROR: Provided path is not a file.")
         return
 
     try:
@@ -74,15 +78,22 @@ def analyze_image(image_path):
 
 def main():
 
-    if len(sys.argv) != 2:
-        print("Usage:")
-        print("python image_analyzer.py <image_path>")
-        print()
-        print("Example:")
-        print("python image_analyzer.py photo.jpg")
-        return
+    # Method 1: Path supplied through command line
+    if len(sys.argv) > 1:
 
-    image_path = sys.argv[1]
+        image_path = sys.argv[1]
+
+    # Method 2: Manually enter path
+    else:
+
+        print("=" * 40)
+        print("IMAGE FILE ANALYZER")
+        print("=" * 40)
+
+        image_path = input("\nEnter image file path: ")
+
+    # Remove quotes if path was copied with quotes
+    image_path = image_path.strip().strip('"').strip("'")
 
     analyze_image(image_path)
 
